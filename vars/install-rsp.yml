@@ -1,0 +1,16 @@
+oracle_install_responseFileVersion: /oracle/install/rspfmt_dbinstall_response_schema_v18.0.0
+oracle_install_option: INSTALL_DB_SWONLY
+UNIX_GROUP_NAME: oinstall
+INVENTORY_LOCATION: /u01/app/oraInventory
+ORACLE_HOME: /u01/app/oracle/18.3/product/dbhome_1
+ORACLE_BASE: /u01/app/oracle
+oracle_install_db_InstallEdition: EE
+oracle_install_db_OSDBA_GROUP: dba
+oracle_install_db_OSOPER_GROUP: oper
+oracle_install_db_OSBACKUPDBA_GROUP: backupdba
+oracle_install_db_OSDGDBA_GROUP: dgdba
+oracle_install_db_OSKMDBA_GROUP: kmdba
+oracle_install_db_OSRACDBA_GROUP: racdba
+SECURITY_UPDATES_VIA_MYORACLESUPPORT: false
+DECLINE_SECURITY_UPDATES: true
+oracle_installer_autoupdates_option: SKIP_UPDATES
