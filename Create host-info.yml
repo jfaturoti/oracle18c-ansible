@@ -1,0 +1,6 @@
+backup_ebs_dev: /dev/xvdc
+backup_ebs_mount: /backup
+data_ebs_dev: /dev/xvdb
+data_ebs_mount: /u01
+scripts_base: /u01/scripts/oracle-provision
+software_location: /scripts/software/LINUX.X64_180000_db_home.zip
