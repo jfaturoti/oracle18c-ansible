@@ -1,0 +1,85 @@
+# AUTHOR: John Faturoti (john.faturoti@gmail.com)
+#
+# DESCRIPTION: Ansible playbook for performing Oracle 18c EE RDBMS pre-installation on RHEL 7
+#
+# SUMMARY OF STEPS:
+# 1. declare variables
+# 2. create and mount filesystem
+# 3. install OS packages
+# 4. create OS user (oracle software owner) and change password
+
+  - name: Pre Installation Tasks
+    hosts: "{{ oracle_host }}"
+    become: yes
+    become_user: root
+
+    tasks:
+      - name: load all variables from variables directory
+        include_vars:
+          dir: vars
+          depth: 1
+
+      - name: add hostname entries
+        shell: |
+          echo "`ifconfig | grep -w 'inet' | awk '{print $2}' | grep -v '127.0'` {{ oracle-dev }} {{ oracle-dev }}.localhost" >> /etc/hosts
+          echo "{{ oracle-dev }}" > /etc/hostname
+          hostname "{{ oracle-dev }}"
+      - name: create ext4 filesystem for data
+        filesystem:
+          fstype: ext4
+          dev: "{{ data_ebs_dev }}"
+
+      - name: mount data filesystem
+        mount:
+          path: "{{ data_ebs_mount }}"
+          src: "{{ data_ebs_dev }}"
+          fstype: ext4
+          opts: defaults,noatime
+          state: mounted
+
+      - name: create ext4 filesystem for backup
+        filesystem:
+          fstype: ext4
+          dev: "{{ backup_ebs_dev }}"
+
+      - name: mount backup filesystem
+        mount:
+          path: "{{ backup_ebs_mount }}"
+          src: "{{ backup_ebs_dev }}"
+          fstype: ext4
+          opts: defaults,noatime
+          state: mounted
+
+
+      - name: create scripts directory
+        file:
+          path: "{{ scripts_base }}"
+          owner: root
+          group: root
+          mode: 0777
+          state: directory
+          recurse: yes
+
+      - name: install packages, kernel params, group and user creation
+        yum:
+          state: latest
+          name:
+            - unzip
+            - curl
+            - dos2unix
+            - https://rpmfind.net/linux/centos/7.7.1908/os/x86_64/Packages/compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm
+            - https://rpmfind.net/linux/centos/7.7.1908/os/x86_64/Packages/compat-libcap1-1.10-7.el7.x86_64.rpm
+            - https://yum.oracle.com/repo/OracleLinux/OL7/latest/x86_64/getPackage/oracle-database-preinstall-18c-1.0-1.el7.x86_64.rpm
+            #- libnsl
+
+      - name: create ORACLE HOME directory
+        file:
+          path: "{{ oracle_home }}"
+          owner: oracle
+          group: oinstall
+          mode: 0775
+          state: directory
+          recurse: yes
+
+      - name: change oracle user password
+        shell: echo "oracle:{{ oracle_password }}" | chpasswd
