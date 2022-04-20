@@ -1,0 +1,68 @@
+# AUTHOR: John Faturoti (john.faturoti@gmail.com)
+#
+# DESCRIPTION: Ansible playbook for performing Oracle 18c EE RDBMS installation on RHEL 7
+#
+# SUMMARY OF STEPS:
+# 1. add bash_profile entries
+# 2. stage software
+# 3. create installation response file
+# 4. install software
+
+  - name: Installation Tasks
+    hosts: "{{ oracle_host }}"
+    become: yes
+    become_user: oracle
+    become_method: su
+    vars:
+      ansible_become_pass: "{{ oracle_password }}"
+
+    tasks:
+      - name: add .bash_profile entries
+        blockinfile:
+          path: /home/oracle/.bash_profile
+          block: |
+            export TMPDIR={{ tmp_dir }}
+            export ORACLE_BASE={{ oracle_base }}
+            export ORACLE_HOME={{ oracle_home }}
+            export TNS_ADMIN={{ tns_admin }}
+            export PATH={{ paths }}
+            export LD_LIBRARY_PATH={{ ld_library_path }}
+            export CLASSPATH={{ classpath }}
+      - name: unzip and stage oracle software binaries
+        unarchive:
+          src: "{{ software_location }}"
+          dest: "{{ oracle_home }}"
+          remote_src: no
+
+      - name: create oracle software install response file
+        blockinfile:
+          path: "{{ scripts_base }}/db_install.rsp"
+          create: yes
+          block: |
+            oracle.install.responseFileVersion={{ oracle_install_responseFileVersion }}
+            oracle.install.option={{ oracle_install_option }}
+            UNIX_GROUP_NAME={{ UNIX_GROUP_NAME }}
+            INVENTORY_LOCATION={{ INVENTORY_LOCATION }}
+            ORACLE_HOME={{ ORACLE_HOME }}
+            ORACLE_BASE={{ ORACLE_BASE }}
+            oracle.install.db.InstallEdition={{ oracle_install_db_InstallEdition }}
+            oracle.install.db.OSDBA_GROUP={{ oracle_install_db_OSDBA_GROUP }}
+            oracle.install.db.OSOPER_GROUP={{ oracle_install_db_OSOPER_GROUP }}
+            oracle.install.db.OSBACKUPDBA_GROUP={{ oracle_install_db_OSBACKUPDBA_GROUP }}
+            oracle.install.db.OSDGDBA_GROUP={{ oracle_install_db_OSDGDBA_GROUP }}
+            oracle.install.db.OSKMDBA_GROUP={{ oracle_install_db_OSKMDBA_GROUP }}
+            oracle.install.db.OSRACDBA_GROUP={{ oracle_install_db_OSRACDBA_GROUP }}
+            SECURITY_UPDATES_VIA_MYORACLESUPPORT={{ SECURITY_UPDATES_VIA_MYORACLESUPPORT | lower }}
+            DECLINE_SECURITY_UPDATES={{ DECLINE_SECURITY_UPDATES | lower }}
+            oracle.installer.autoupdates.option={{ oracle_installer_autoupdates_option }}
+      - name: install oracle software
+        shell: ./runInstaller -silent -ignorePrereqFailure -waitforcompletion -responseFile "{{ scripts_base }}/db_install.rsp"
+        ignore_errors: True
+        register: output
+        failed_when: false
+        args:
+          chdir: "{{ oracle_home }}"
+
+      - name: installation results
+        debug:
+          var: command_result
