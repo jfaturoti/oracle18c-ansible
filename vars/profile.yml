@@ -1,0 +1,7 @@
+oracle_base: /u01/app/oracle
+oracle_home: "{{ oracle_base }}/18.3/product/dbhome_1"
+classpath: "{{ oracle_home }}/jlib:$ORACLE_HOME/rdbms/jlib"
+ld_library_path: "{{ oracle_home }}/lib:/lib:/usr/lib"
+paths: "/usr/sbin:{{ oracle_home }}/bin:$PATH"
+tmp_dir: /tmp
+tns_admin: "{{ oracle_home }}/network/admin"
